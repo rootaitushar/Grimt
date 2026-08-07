@@ -34,6 +34,8 @@ type FormState = {
   semester: string;
   result_status: string;
   backlogs: string;
+  campus_placement: string;
+  placement_opt_out_reason: string;
   contact_number: string;
   email: string;
   address: string;
@@ -48,6 +50,8 @@ const emptyForm: FormState = {
   semester: "",
   result_status: "",
   backlogs: "0",
+  campus_placement: "",
+  placement_opt_out_reason: "",
   contact_number: "",
   email: "",
   address: "",
@@ -118,6 +122,11 @@ function Index() {
     if (!isClear && (form.backlogs.trim() === "" || !Number.isInteger(backlogs) || backlogs < 0))
       e.backlogs = "Please enter a valid number of backlogs.";
 
+    if (!form.campus_placement)
+      e.campus_placement = "Please select whether you want to sit in campus placement.";
+    if (form.campus_placement === "No" && !form.placement_opt_out_reason.trim())
+      e.placement_opt_out_reason = "Please enter your reason for not sitting in campus placement.";
+
     if (!/^[6-9]\d{9}$/.test(form.contact_number.replace(/\D/g, "")))
       e.contact_number = "Please enter a valid 10-digit mobile number.";
 
@@ -145,6 +154,9 @@ function Index() {
         semester: form.semester.trim(),
         result_status: form.result_status,
         backlogs: isClear ? 0 : Number(form.backlogs),
+        wants_campus_placement: form.campus_placement === "Yes",
+        placement_opt_out_reason:
+          form.campus_placement === "No" ? form.placement_opt_out_reason.trim() : null,
         contact_number: form.contact_number.replace(/\D/g, ""),
         email: form.email.trim(),
         address: form.address.trim(),
@@ -180,7 +192,7 @@ function Index() {
               <img
                 src="/GRIMT-Logo.png"
                 alt="Global Research Institute of Management & Technology, Radaur logo"
-                className="size-16 shrink-0 rounded-full bg-card object-contain p-1 ring-1 ring-border sm:size-20"
+                className="h-24 w-20 shrink-0 object-contain sm:h-32 sm:w-28"
               />
               <div className="min-w-0">
                 <p className="text-xs font-semibold tracking-wide text-brand-red uppercase sm:text-sm">
@@ -332,6 +344,66 @@ function Index() {
                   aria-describedby={errors.backlogs ? "backlogs-error" : undefined}
                 />
               </Field>
+
+              <Field
+                id="campus_placement"
+                label="Do you want to sit in campus placement?"
+                required
+                error={errors.campus_placement}
+              >
+                <select
+                  id="campus_placement"
+                  className={fieldClass}
+                  value={form.campus_placement}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((current) => ({
+                      ...current,
+                      campus_placement: value,
+                      placement_opt_out_reason:
+                        value === "Yes" ? "" : current.placement_opt_out_reason,
+                    }));
+                    setErrors((current) => ({
+                      ...current,
+                      campus_placement: undefined,
+                      placement_opt_out_reason: undefined,
+                    }));
+                    setSuccess(false);
+                    setFormError(null);
+                  }}
+                  aria-invalid={!!errors.campus_placement}
+                  aria-describedby={errors.campus_placement ? "campus_placement-error" : undefined}
+                >
+                  <option value="">Select Yes or No</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </Field>
+
+              {form.campus_placement === "No" && (
+                <Field
+                  id="placement_opt_out_reason"
+                  label="Reason for not sitting in campus placement"
+                  required
+                  error={errors.placement_opt_out_reason}
+                  className="sm:col-span-2"
+                >
+                  <textarea
+                    id="placement_opt_out_reason"
+                    rows={3}
+                    className={`${fieldClass} min-h-24 resize-y`}
+                    placeholder="Please explain your reason"
+                    value={form.placement_opt_out_reason}
+                    onChange={(e) => set("placement_opt_out_reason", e.target.value)}
+                    aria-invalid={!!errors.placement_opt_out_reason}
+                    aria-describedby={
+                      errors.placement_opt_out_reason
+                        ? "placement_opt_out_reason-error"
+                        : undefined
+                    }
+                  />
+                </Field>
+              )}
 
               <Field id="contact_number" label="Contact No." required error={errors.contact_number}>
                 <input

@@ -45,6 +45,8 @@ export type Database = {
           semester: string
           student_name: string
           updated_at: string
+          wants_campus_placement: boolean
+          placement_opt_out_reason: string | null
         }
         Insert: {
           address: string
@@ -61,6 +63,8 @@ export type Database = {
           semester: string
           student_name: string
           updated_at?: string
+          wants_campus_placement?: boolean
+          placement_opt_out_reason?: string | null
         }
         Update: {
           address?: string
@@ -77,6 +81,8 @@ export type Database = {
           semester?: string
           student_name?: string
           updated_at?: string
+          wants_campus_placement?: boolean
+          placement_opt_out_reason?: string | null
         }
         Relationships: []
       }

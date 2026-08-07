@@ -36,6 +36,8 @@ const columns: Array<{ key: keyof Student; label: string }> = [
   { key: "semester", label: "Semester" },
   { key: "result_status", label: "Result Status" },
   { key: "backlogs", label: "Backlogs" },
+  { key: "wants_campus_placement", label: "Campus Placement" },
+  { key: "placement_opt_out_reason", label: "Opt-out Reason" },
   { key: "contact_number", label: "Contact Number" },
   { key: "email", label: "Email" },
   { key: "address", label: "Address" },
@@ -61,7 +63,11 @@ function exportToExcel(rows: Student[]) {
       (student) =>
         `<Row>${columns
           .map(({ key }) => {
-            const raw = key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : student[key];
+            const raw = key === "created_at"
+              ? new Date(student[key]).toLocaleString("en-IN")
+              : key === "wants_campus_placement"
+                ? student[key] ? "Yes" : "No"
+                : student[key];
             const type = key === "backlogs" ? "Number" : "String";
             return `<Cell><Data ss:Type="${type}">${escapeXml(raw)}</Data></Cell>`;
           })
@@ -191,7 +197,7 @@ function AdminPage() {
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
           <div className="text-center">
-            <img src="/GRIMT-Logo.png" alt="GRIMT logo" className="mx-auto size-20 rounded-full object-contain ring-1 ring-border" />
+            <img src="/GRIMT-Logo.png" alt="GRIMT logo" className="mx-auto h-32 w-28 object-contain" />
             <ShieldCheck className="mx-auto mt-5 size-8 text-primary" />
             <h1 className="mt-2 text-2xl font-bold text-foreground">Placement Admin</h1>
             <p className="mt-1 text-sm text-muted-foreground">Sign in to view and export student submissions.</p>
@@ -221,7 +227,7 @@ function AdminPage() {
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-[1500px]">
         <header className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3"><img src="/GRIMT-Logo.png" alt="GRIMT logo" className="size-12 rounded-full object-contain ring-1 ring-border" /><div><p className="text-xs font-semibold uppercase tracking-wide text-brand-red">Training &amp; Placement</p><h1 className="text-xl font-bold">Student Submissions</h1></div></div>
+          <div className="flex items-center gap-3"><img src="/GRIMT-Logo.png" alt="GRIMT logo" className="h-20 w-16 object-contain" /><div><p className="text-xs font-semibold uppercase tracking-wide text-brand-red">Training &amp; Placement</p><h1 className="text-xl font-bold">Student Submissions</h1></div></div>
           <div className="flex flex-wrap gap-2"><Link to="/" className="inline-flex min-h-10 items-center rounded-lg border border-input px-4 text-sm font-medium">Open form</Link><button onClick={() => void supabase.auth.signOut()} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 text-sm font-medium"><LogOut className="size-4" /> Sign out</button></div>
         </header>
 
@@ -239,7 +245,7 @@ function AdminPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] text-left text-sm">
               <thead className="bg-secondary/70 text-xs uppercase text-muted-foreground"><tr>{columns.map((column) => <th key={column.key} className="whitespace-nowrap px-4 py-3 font-semibold">{column.label}</th>)}</tr></thead>
-              <tbody className="divide-y divide-border">{loading && students.length === 0 ? <tr><td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 size-6 animate-spin" />Loading submissions...</td></tr> : filtered.length === 0 ? <tr><td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground">No student submissions found.</td></tr> : filtered.map((student) => <tr key={student.id} className="hover:bg-secondary/30">{columns.map(({ key }) => <td key={key} className="max-w-64 px-4 py-3 align-top"><span className="line-clamp-3">{key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : String(student[key] ?? "—")}</span></td>)}</tr>)}</tbody>
+              <tbody className="divide-y divide-border">{loading && students.length === 0 ? <tr><td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 size-6 animate-spin" />Loading submissions...</td></tr> : filtered.length === 0 ? <tr><td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground">No student submissions found.</td></tr> : filtered.map((student) => <tr key={student.id} className="hover:bg-secondary/30">{columns.map(({ key }) => <td key={key} className="max-w-64 px-4 py-3 align-top"><span className="line-clamp-3">{key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : key === "wants_campus_placement" ? student[key] ? "Yes" : "No" : String(student[key] ?? "—")}</span></td>)}</tr>)}</tbody>
             </table>
           </div>
           <div className="border-t border-border px-4 py-3 text-sm text-muted-foreground">Showing {filtered.length} of {students.length} records</div>
