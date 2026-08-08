@@ -33,18 +33,47 @@ export type Database = {
         Row: {
           address: string
           aadhaar_number: string | null
+          average_percentage: number | null
           backlogs: number
-          branch: string
+          branch: string | null
           contact_number: string
           created_at: string
           email: string
           father_name: string
+          father_phone: string | null
           id: string
+          local_address: string | null
+          mother_name: string | null
+          mother_phone: string | null
           remarks: string | null
-          result_status: string
+          result_status: string | null
           roll_number: string
-          semester: string
+          semester: string | null
+          semester_1_status: string | null
+          semester_1_marks: number | null
+          semester_1_reappears: number
+          semester_2_status: string | null
+          semester_2_marks: number | null
+          semester_2_reappears: number
+          semester_3_status: string | null
+          semester_3_marks: number | null
+          semester_3_reappears: number
+          semester_4_status: string | null
+          semester_4_marks: number | null
+          semester_4_reappears: number
+          semester_5_status: string | null
+          semester_5_marks: number | null
+          semester_5_reappears: number
+          semester_6_status: string | null
+          semester_6_marks: number | null
+          semester_6_reappears: number
+          semester_7_status: string | null
+          semester_7_marks: number | null
+          semester_7_reappears: number
           student_name: string
+          tenth_percentage: number | null
+          total_reappears: number
+          twelfth_percentage: number | null
           updated_at: string
           wants_campus_placement: boolean
           placement_opt_out_reason: string | null
@@ -52,18 +81,47 @@ export type Database = {
         Insert: {
           address: string
           aadhaar_number: string
+          average_percentage?: number | null
           backlogs?: number
-          branch: string
+          branch?: string | null
           contact_number: string
           created_at?: string
           email: string
           father_name: string
+          father_phone?: string | null
           id?: string
+          local_address?: string | null
+          mother_name?: string | null
+          mother_phone?: string | null
           remarks?: string | null
-          result_status: string
+          result_status?: string | null
           roll_number: string
-          semester: string
+          semester?: string | null
+          semester_1_status?: string | null
+          semester_1_marks?: number | null
+          semester_1_reappears?: number
+          semester_2_status?: string | null
+          semester_2_marks?: number | null
+          semester_2_reappears?: number
+          semester_3_status?: string | null
+          semester_3_marks?: number | null
+          semester_3_reappears?: number
+          semester_4_status?: string | null
+          semester_4_marks?: number | null
+          semester_4_reappears?: number
+          semester_5_status?: string | null
+          semester_5_marks?: number | null
+          semester_5_reappears?: number
+          semester_6_status?: string | null
+          semester_6_marks?: number | null
+          semester_6_reappears?: number
+          semester_7_status?: string | null
+          semester_7_marks?: number | null
+          semester_7_reappears?: number
           student_name: string
+          tenth_percentage?: number | null
+          total_reappears?: number
+          twelfth_percentage?: number | null
           updated_at?: string
           wants_campus_placement?: boolean
           placement_opt_out_reason?: string | null
@@ -71,18 +129,47 @@ export type Database = {
         Update: {
           address?: string
           aadhaar_number?: string | null
+          average_percentage?: number | null
           backlogs?: number
           branch?: string
           contact_number?: string
           created_at?: string
           email?: string
           father_name?: string
+          father_phone?: string | null
           id?: string
+          local_address?: string | null
+          mother_name?: string | null
+          mother_phone?: string | null
           remarks?: string | null
           result_status?: string
           roll_number?: string
           semester?: string
+          semester_1_status?: string | null
+          semester_1_marks?: number | null
+          semester_1_reappears?: number
+          semester_2_status?: string | null
+          semester_2_marks?: number | null
+          semester_2_reappears?: number
+          semester_3_status?: string | null
+          semester_3_marks?: number | null
+          semester_3_reappears?: number
+          semester_4_status?: string | null
+          semester_4_marks?: number | null
+          semester_4_reappears?: number
+          semester_5_status?: string | null
+          semester_5_marks?: number | null
+          semester_5_reappears?: number
+          semester_6_status?: string | null
+          semester_6_marks?: number | null
+          semester_6_reappears?: number
+          semester_7_status?: string | null
+          semester_7_marks?: number | null
+          semester_7_reappears?: number
           student_name?: string
+          tenth_percentage?: number | null
+          total_reappears?: number
+          twelfth_percentage?: number | null
           updated_at?: string
           wants_campus_placement?: boolean
           placement_opt_out_reason?: string | null

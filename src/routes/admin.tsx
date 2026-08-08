@@ -29,20 +29,43 @@ export const Route = createFileRoute("/admin")({
 type Student = Tables<"placement_students">;
 
 const columns: Array<{ key: keyof Student; label: string }> = [
-  { key: "student_name", label: "Student Name" },
-  { key: "father_name", label: "Father's Name" },
   { key: "roll_number", label: "Roll Number" },
-  { key: "branch", label: "Branch" },
-  { key: "semester", label: "Semester" },
-  { key: "result_status", label: "Result Status" },
-  { key: "backlogs", label: "Backlogs" },
-  { key: "wants_campus_placement", label: "Campus Placement" },
-  { key: "placement_opt_out_reason", label: "Opt-out Reason" },
-  { key: "contact_number", label: "Contact Number" },
+  { key: "student_name", label: "Name of Student" },
   { key: "aadhaar_number", label: "Aadhaar Number" },
-  { key: "email", label: "Email" },
-  { key: "address", label: "Address" },
-  { key: "remarks", label: "Remarks" },
+  { key: "contact_number", label: "Student Phone" },
+  { key: "email", label: "Student Email" },
+  { key: "father_name", label: "Father's Name" },
+  { key: "father_phone", label: "Father's Phone" },
+  { key: "mother_name", label: "Mother's Name" },
+  { key: "address", label: "Permanent / Home Town" },
+  { key: "local_address", label: "Local Address" },
+  { key: "tenth_percentage", label: "10th Marks %" },
+  { key: "twelfth_percentage", label: "12th Marks %" },
+  { key: "semester_1_status", label: "1st Sem Status" },
+  { key: "semester_1_marks", label: "1st Sem Marks %" },
+  { key: "semester_1_reappears", label: "1st Sem Reappears" },
+  { key: "semester_2_status", label: "2nd Sem Status" },
+  { key: "semester_2_marks", label: "2nd Sem Marks %" },
+  { key: "semester_2_reappears", label: "2nd Sem Reappears" },
+  { key: "semester_3_status", label: "3rd Sem Status" },
+  { key: "semester_3_marks", label: "3rd Sem Marks %" },
+  { key: "semester_3_reappears", label: "3rd Sem Reappears" },
+  { key: "semester_4_status", label: "4th Sem Status" },
+  { key: "semester_4_marks", label: "4th Sem Marks %" },
+  { key: "semester_4_reappears", label: "4th Sem Reappears" },
+  { key: "semester_5_status", label: "5th Sem Status" },
+  { key: "semester_5_marks", label: "5th Sem Marks %" },
+  { key: "semester_5_reappears", label: "5th Sem Reappears" },
+  { key: "semester_6_status", label: "6th Sem Status" },
+  { key: "semester_6_marks", label: "6th Sem Marks %" },
+  { key: "semester_6_reappears", label: "6th Sem Reappears" },
+  { key: "semester_7_status", label: "7th Sem Status" },
+  { key: "semester_7_marks", label: "7th Sem Marks %" },
+  { key: "semester_7_reappears", label: "7th Sem Reappears" },
+  { key: "average_percentage", label: "Average %" },
+  { key: "total_reappears", label: "Total Reappears" },
+  { key: "wants_campus_placement", label: "Placement Required" },
+  { key: "placement_opt_out_reason", label: "Placement Not Required Reason" },
   { key: "created_at", label: "Submitted At" },
 ];
 
@@ -56,20 +79,20 @@ function escapeXml(value: unknown) {
 }
 
 function exportToExcel(rows: Student[]) {
-  const header = columns
-    .map(({ label }) => `<Cell><Data ss:Type="String">${escapeXml(label)}</Data></Cell>`)
+  const header = ["S.No", ...columns.map(({ label }) => label)]
+    .map((label) => `<Cell><Data ss:Type="String">${escapeXml(label)}</Data></Cell>`)
     .join("");
   const body = rows
     .map(
-      (student) =>
-        `<Row>${columns
+      (student, index) =>
+        `<Row><Cell><Data ss:Type="Number">${index + 1}</Data></Cell>${columns
           .map(({ key }) => {
             const raw = key === "created_at"
               ? new Date(student[key]).toLocaleString("en-IN")
               : key === "wants_campus_placement"
                 ? student[key] ? "Yes" : "No"
                 : student[key];
-            const type = key === "backlogs" ? "Number" : "String";
+            const type = typeof raw === "number" ? "Number" : "String";
             return `<Cell><Data ss:Type="${type}">${escapeXml(raw)}</Data></Cell>`;
           })
           .join("")}</Row>`,
@@ -165,7 +188,7 @@ function AdminPage() {
     const needle = search.trim().toLowerCase();
     if (!needle) return students;
     return students.filter((student) =>
-      [student.student_name, student.roll_number, student.branch, student.email, student.contact_number]
+      [student.student_name, student.roll_number, student.email, student.contact_number]
         .join(" ")
         .toLowerCase()
         .includes(needle),
@@ -234,19 +257,19 @@ function AdminPage() {
 
         <section className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-border bg-card p-5"><Users className="size-5 text-primary" /><p className="mt-3 text-3xl font-bold">{students.length}</p><p className="text-sm text-muted-foreground">Total submissions</p></div>
-          <div className="rounded-xl border border-border bg-card p-5"><GraduationCap className="size-5 text-primary" /><p className="mt-3 text-3xl font-bold">{new Set(students.map((s) => s.branch.toLowerCase())).size}</p><p className="text-sm text-muted-foreground">Branches represented</p></div>
+          <div className="rounded-xl border border-border bg-card p-5"><GraduationCap className="size-5 text-primary" /><p className="mt-3 text-3xl font-bold">{students.filter((s) => s.wants_campus_placement).length}</p><p className="text-sm text-muted-foreground">Placement required</p></div>
         </section>
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-md"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, roll no., branch, email..." className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-ring/40" /></div>
+            <div className="relative w-full sm:max-w-md"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, roll no., email or phone..." className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-ring/40" /></div>
             <div className="flex gap-2"><button onClick={() => void loadStudents()} disabled={loading} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 text-sm font-medium disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh</button><button onClick={() => exportToExcel(filtered)} disabled={filtered.length === 0} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"><Download className="size-4" /> Download Excel</button></div>
           </div>
           {error && <div role="alert" className="m-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] text-left text-sm">
-              <thead className="bg-secondary/70 text-xs uppercase text-muted-foreground"><tr>{columns.map((column) => <th key={column.key} className="whitespace-nowrap px-4 py-3 font-semibold">{column.label}</th>)}</tr></thead>
-              <tbody className="divide-y divide-border">{loading && students.length === 0 ? <tr><td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 size-6 animate-spin" />Loading submissions...</td></tr> : filtered.length === 0 ? <tr><td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground">No student submissions found.</td></tr> : filtered.map((student) => <tr key={student.id} className="hover:bg-secondary/30">{columns.map(({ key }) => <td key={key} className="max-w-64 px-4 py-3 align-top"><span className="line-clamp-3">{key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : key === "wants_campus_placement" ? student[key] ? "Yes" : "No" : String(student[key] ?? "—")}</span></td>)}</tr>)}</tbody>
+              <thead className="bg-secondary/70 text-xs uppercase text-muted-foreground"><tr><th className="whitespace-nowrap px-4 py-3 font-semibold">S.No</th>{columns.map((column) => <th key={column.key} className="whitespace-nowrap px-4 py-3 font-semibold">{column.label}</th>)}</tr></thead>
+              <tbody className="divide-y divide-border">{loading && students.length === 0 ? <tr><td colSpan={columns.length + 1} className="px-4 py-16 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 size-6 animate-spin" />Loading submissions...</td></tr> : filtered.length === 0 ? <tr><td colSpan={columns.length + 1} className="px-4 py-16 text-center text-muted-foreground">No student submissions found.</td></tr> : filtered.map((student, index) => <tr key={student.id} className="hover:bg-secondary/30"><td className="px-4 py-3 align-top">{index + 1}</td>{columns.map(({ key }) => <td key={key} className="max-w-64 px-4 py-3 align-top"><span className="line-clamp-3">{key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : key === "wants_campus_placement" ? student[key] ? "Yes" : "No" : String(student[key] ?? "—")}</span></td>)}</tr>)}</tbody>
             </table>
           </div>
           <div className="border-t border-border px-4 py-3 text-sm text-muted-foreground">Showing {filtered.length} of {students.length} records</div>

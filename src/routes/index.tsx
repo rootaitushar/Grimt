@@ -28,36 +28,78 @@ export const Route = createFileRoute("/")({
 
 type FormState = {
   student_name: string;
-  father_name: string;
   roll_number: string;
-  branch: string;
-  semester: string;
-  result_status: string;
-  backlogs: string;
+  aadhaar_number: string;
+  contact_number: string;
+  email: string;
+  father_name: string;
+  father_phone: string;
+  mother_name: string;
+  permanent_address: string;
+  local_address: string;
+  tenth_percentage: string;
+  twelfth_percentage: string;
+  semester_1_status: string;
+  semester_1_marks: string;
+  semester_1_reappears: string;
+  semester_2_status: string;
+  semester_2_marks: string;
+  semester_2_reappears: string;
+  semester_3_status: string;
+  semester_3_marks: string;
+  semester_3_reappears: string;
+  semester_4_status: string;
+  semester_4_marks: string;
+  semester_4_reappears: string;
+  semester_5_status: string;
+  semester_5_marks: string;
+  semester_5_reappears: string;
+  semester_6_status: string;
+  semester_6_marks: string;
+  semester_6_reappears: string;
+  semester_7_status: string;
+  semester_7_marks: string;
+  semester_7_reappears: string;
   campus_placement: string;
   placement_opt_out_reason: string;
-  contact_number: string;
-  aadhaar_number: string;
-  email: string;
-  address: string;
-  remarks: string;
 };
 
 const emptyForm: FormState = {
   student_name: "",
-  father_name: "",
   roll_number: "",
-  branch: "",
-  semester: "",
-  result_status: "",
-  backlogs: "0",
+  aadhaar_number: "",
+  contact_number: "",
+  email: "",
+  father_name: "",
+  father_phone: "",
+  mother_name: "",
+  permanent_address: "",
+  local_address: "",
+  tenth_percentage: "",
+  twelfth_percentage: "",
+  semester_1_status: "",
+  semester_1_marks: "",
+  semester_1_reappears: "0",
+  semester_2_status: "",
+  semester_2_marks: "",
+  semester_2_reappears: "0",
+  semester_3_status: "",
+  semester_3_marks: "",
+  semester_3_reappears: "0",
+  semester_4_status: "",
+  semester_4_marks: "",
+  semester_4_reappears: "0",
+  semester_5_status: "",
+  semester_5_marks: "",
+  semester_5_reappears: "0",
+  semester_6_status: "",
+  semester_6_marks: "",
+  semester_6_reappears: "0",
+  semester_7_status: "",
+  semester_7_marks: "",
+  semester_7_reappears: "0",
   campus_placement: "",
   placement_opt_out_reason: "",
-  contact_number: "",
-  aadhaar_number: "",
-  email: "",
-  address: "",
-  remarks: "",
 };
 
 type Errors = { [K in keyof FormState]?: string | undefined };
@@ -102,7 +144,22 @@ function Index() {
   const [success, setSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const isClear = form.result_status === "Clear";
+  const semesterNumbers = [1, 2, 3, 4, 5, 6, 7] as const;
+  const completedSemesterMarks = semesterNumbers
+    .map((semester) => {
+      const status = form[`semester_${semester}_status`];
+      const marks = form[`semester_${semester}_marks`];
+      return status !== "Result Awaited" && marks !== "" ? Number(marks) : null;
+    })
+    .filter((marks): marks is number => marks !== null && Number.isFinite(marks));
+  const calculatedAverage = completedSemesterMarks.length
+    ? completedSemesterMarks.reduce((total, marks) => total + marks, 0) /
+      completedSemesterMarks.length
+    : null;
+  const calculatedTotalReappears = semesterNumbers.reduce((total, semester) => {
+    if (form[`semester_${semester}_status`] !== "Backlog") return total;
+    return total + (Number(form[`semester_${semester}_reappears`]) || 0);
+  }, 0);
 
   const set = (key: keyof FormState, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -114,20 +171,7 @@ function Index() {
   const validate = (): Errors => {
     const e: Errors = {};
     if (!form.student_name.trim()) e.student_name = "Please enter your name.";
-    if (!form.father_name.trim()) e.father_name = "Please enter your father's name.";
     if (!form.roll_number.trim()) e.roll_number = "Please enter your roll number.";
-    if (!form.branch.trim()) e.branch = "Please enter your branch.";
-    if (!form.semester.trim()) e.semester = "Please enter your semester.";
-    if (!form.result_status) e.result_status = "Please select your result status.";
-
-    const backlogs = Number(form.backlogs);
-    if (!isClear && (form.backlogs.trim() === "" || !Number.isInteger(backlogs) || backlogs < 0))
-      e.backlogs = "Please enter a valid number of backlogs.";
-
-    if (!form.campus_placement)
-      e.campus_placement = "Please select whether you want to sit in campus placement.";
-    if (form.campus_placement === "No" && !form.placement_opt_out_reason.trim())
-      e.placement_opt_out_reason = "Please enter your reason for not sitting in campus placement.";
 
     if (!/^[6-9]\d{9}$/.test(form.contact_number.replace(/\D/g, "")))
       e.contact_number = "Please enter a valid 10-digit mobile number.";
@@ -138,7 +182,40 @@ function Index() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim()))
       e.email = "Please enter a valid email address.";
 
-    if (!form.address.trim()) e.address = "Please enter your address.";
+    if (!form.father_name.trim()) e.father_name = "Please enter your father's name.";
+    if (!/^[6-9]\d{9}$/.test(form.father_phone.replace(/\D/g, "")))
+      e.father_phone = "Please enter a valid 10-digit mobile number.";
+    if (!form.mother_name.trim()) e.mother_name = "Please enter your mother's name.";
+    if (!form.permanent_address.trim())
+      e.permanent_address = "Please enter your permanent/home-town address.";
+    if (!form.local_address.trim()) e.local_address = "Please enter your local address.";
+
+    const validatePercentage = (key: keyof FormState, label: string) => {
+      const value = Number(form[key]);
+      if (form[key].trim() === "" || !Number.isFinite(value) || value < 0 || value > 100)
+        e[key] = `Please enter a valid ${label} between 0 and 100.`;
+    };
+    validatePercentage("tenth_percentage", "10th percentage");
+    validatePercentage("twelfth_percentage", "12th percentage");
+    for (const semester of semesterNumbers) {
+      const statusKey = `semester_${semester}_status` as keyof FormState;
+      const marksKey = `semester_${semester}_marks` as keyof FormState;
+      const reappearsKey = `semester_${semester}_reappears` as keyof FormState;
+      const status = form[statusKey];
+      const marks = Number(form[marksKey]);
+      const reappears = Number(form[reappearsKey]);
+      if (!status && semester <= 5) e[statusKey] = "Please select the semester result status.";
+      if (!status) continue;
+      if (status !== "Result Awaited" && (form[marksKey] === "" || marks < 0 || marks > 100))
+        e[marksKey] = "Please enter a percentage between 0 and 100.";
+      if (status === "Backlog" && (!Number.isInteger(reappears) || reappears < 1))
+        e[reappearsKey] = "Enter at least 1 backlog.";
+    }
+
+    if (!form.campus_placement)
+      e.campus_placement = "Please select whether placement is required.";
+    if (form.campus_placement === "No" && !form.placement_opt_out_reason.trim())
+      e.placement_opt_out_reason = "Please enter the reason placement is not required.";
     return e;
   };
 
@@ -153,20 +230,43 @@ function Index() {
     try {
       const { error } = await supabase.from("placement_students").insert({
         student_name: form.student_name.trim(),
-        father_name: form.father_name.trim(),
         roll_number: form.roll_number.trim(),
-        branch: form.branch.trim(),
-        semester: form.semester.trim(),
-        result_status: form.result_status,
-        backlogs: isClear ? 0 : Number(form.backlogs),
+        aadhaar_number: form.aadhaar_number.replace(/\D/g, ""),
+        contact_number: form.contact_number.replace(/\D/g, ""),
+        email: form.email.trim(),
+        father_name: form.father_name.trim(),
+        father_phone: form.father_phone.replace(/\D/g, ""),
+        mother_name: form.mother_name.trim(),
+        address: form.permanent_address.trim(),
+        local_address: form.local_address.trim(),
+        tenth_percentage: Number(form.tenth_percentage),
+        twelfth_percentage: Number(form.twelfth_percentage),
+        semester_1_status: form.semester_1_status,
+        semester_1_marks: form.semester_1_marks ? Number(form.semester_1_marks) : null,
+        semester_1_reappears: Number(form.semester_1_reappears),
+        semester_2_status: form.semester_2_status,
+        semester_2_marks: form.semester_2_marks ? Number(form.semester_2_marks) : null,
+        semester_2_reappears: Number(form.semester_2_reappears),
+        semester_3_status: form.semester_3_status,
+        semester_3_marks: form.semester_3_marks ? Number(form.semester_3_marks) : null,
+        semester_3_reappears: Number(form.semester_3_reappears),
+        semester_4_status: form.semester_4_status,
+        semester_4_marks: form.semester_4_marks ? Number(form.semester_4_marks) : null,
+        semester_4_reappears: Number(form.semester_4_reappears),
+        semester_5_status: form.semester_5_status,
+        semester_5_marks: form.semester_5_marks ? Number(form.semester_5_marks) : null,
+        semester_5_reappears: Number(form.semester_5_reappears),
+        semester_6_status: form.semester_6_status || null,
+        semester_6_marks: form.semester_6_marks ? Number(form.semester_6_marks) : null,
+        semester_6_reappears: Number(form.semester_6_reappears),
+        semester_7_status: form.semester_7_status || null,
+        semester_7_marks: form.semester_7_marks ? Number(form.semester_7_marks) : null,
+        semester_7_reappears: Number(form.semester_7_reappears),
+        average_percentage: calculatedAverage,
+        total_reappears: calculatedTotalReappears,
         wants_campus_placement: form.campus_placement === "Yes",
         placement_opt_out_reason:
           form.campus_placement === "No" ? form.placement_opt_out_reason.trim() : null,
-        contact_number: form.contact_number.replace(/\D/g, ""),
-        aadhaar_number: form.aadhaar_number.replace(/\D/g, ""),
-        email: form.email.trim(),
-        address: form.address.trim(),
-        remarks: form.remarks.trim() || null,
       });
 
       if (error) {
@@ -258,19 +358,6 @@ function Index() {
                 />
               </Field>
 
-              <Field id="father_name" label="Father's Name" required error={errors.father_name}>
-                <input
-                  id="father_name"
-                  type="text"
-                  className={fieldClass}
-                  placeholder="Enter father's name"
-                  value={form.father_name}
-                  onChange={(e) => set("father_name", e.target.value)}
-                  aria-invalid={!!errors.father_name}
-                  aria-describedby={errors.father_name ? "father_name-error" : undefined}
-                />
-              </Field>
-
               <Field id="roll_number" label="Roll No." required error={errors.roll_number}>
                 <input
                   id="roll_number"
@@ -281,148 +368,6 @@ function Index() {
                   onChange={(e) => set("roll_number", e.target.value)}
                   aria-invalid={!!errors.roll_number}
                   aria-describedby={errors.roll_number ? "roll_number-error" : undefined}
-                />
-              </Field>
-
-              <Field id="branch" label="Branch" required error={errors.branch}>
-                <input
-                  id="branch"
-                  type="text"
-                  className={fieldClass}
-                  placeholder="Enter your branch, e.g. CSE"
-                  value={form.branch}
-                  onChange={(e) => set("branch", e.target.value)}
-                  aria-invalid={!!errors.branch}
-                  aria-describedby={errors.branch ? "branch-error" : undefined}
-                />
-              </Field>
-
-              <Field id="semester" label="Semester" required error={errors.semester}>
-                <input
-                  id="semester"
-                  type="text"
-                  className={fieldClass}
-                  placeholder="Enter your semester, e.g. 6th Semester"
-                  value={form.semester}
-                  onChange={(e) => set("semester", e.target.value)}
-                  aria-invalid={!!errors.semester}
-                  aria-describedby={errors.semester ? "semester-error" : undefined}
-                />
-              </Field>
-
-              <Field id="result_status" label="Result" required error={errors.result_status}>
-                <select
-                  id="result_status"
-                  className={fieldClass}
-                  value={form.result_status}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setForm((f) => ({
-                      ...f,
-                      result_status: value,
-                      backlogs: value === "Clear" ? "0" : f.backlogs,
-                    }));
-                    setErrors((er) => ({ ...er, result_status: undefined, backlogs: undefined }));
-                    setSuccess(false);
-                  }}
-                  aria-invalid={!!errors.result_status}
-                  aria-describedby={errors.result_status ? "result_status-error" : undefined}
-                >
-                  <option value="">Select Result Status</option>
-                  <option value="Clear">Clear</option>
-                  <option value="Awaiting Result">Awaiting Result</option>
-                  <option value="Backlog / Reappear">Backlog / Reappear</option>
-                </select>
-              </Field>
-
-              <Field id="backlogs" label="No. of Backlogs" required error={errors.backlogs}>
-                <input
-                  id="backlogs"
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  className={fieldClass}
-                  value={isClear ? "0" : form.backlogs}
-                  disabled={isClear}
-                  onChange={(e) => set("backlogs", e.target.value)}
-                  aria-invalid={!!errors.backlogs}
-                  aria-describedby={errors.backlogs ? "backlogs-error" : undefined}
-                />
-              </Field>
-
-              <Field
-                id="campus_placement"
-                label="Do you want to sit in campus placement?"
-                required
-                error={errors.campus_placement}
-              >
-                <select
-                  id="campus_placement"
-                  className={fieldClass}
-                  value={form.campus_placement}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setForm((current) => ({
-                      ...current,
-                      campus_placement: value,
-                      placement_opt_out_reason:
-                        value === "Yes" ? "" : current.placement_opt_out_reason,
-                    }));
-                    setErrors((current) => ({
-                      ...current,
-                      campus_placement: undefined,
-                      placement_opt_out_reason: undefined,
-                    }));
-                    setSuccess(false);
-                    setFormError(null);
-                  }}
-                  aria-invalid={!!errors.campus_placement}
-                  aria-describedby={errors.campus_placement ? "campus_placement-error" : undefined}
-                >
-                  <option value="">Select Yes or No</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </Field>
-
-              {form.campus_placement === "No" && (
-                <Field
-                  id="placement_opt_out_reason"
-                  label="Reason for not sitting in campus placement"
-                  required
-                  error={errors.placement_opt_out_reason}
-                  className="sm:col-span-2"
-                >
-                  <textarea
-                    id="placement_opt_out_reason"
-                    rows={3}
-                    className={`${fieldClass} min-h-24 resize-y`}
-                    placeholder="Please explain your reason"
-                    value={form.placement_opt_out_reason}
-                    onChange={(e) => set("placement_opt_out_reason", e.target.value)}
-                    aria-invalid={!!errors.placement_opt_out_reason}
-                    aria-describedby={
-                      errors.placement_opt_out_reason
-                        ? "placement_opt_out_reason-error"
-                        : undefined
-                    }
-                  />
-                </Field>
-              )}
-
-              <Field id="contact_number" label="Contact No." required error={errors.contact_number}>
-                <input
-                  id="contact_number"
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  className={fieldClass}
-                  placeholder="Enter 10-digit mobile number"
-                  value={form.contact_number}
-                  onChange={(e) => set("contact_number", e.target.value.replace(/\D/g, ""))}
-                  aria-invalid={!!errors.contact_number}
-                  aria-describedby={errors.contact_number ? "contact_number-error" : undefined}
                 />
               </Field>
 
@@ -448,13 +393,11 @@ function Index() {
                 />
               </Field>
 
-              <Field
-                id="email"
-                label="Email"
-                required
-                error={errors.email}
-                className="sm:col-span-2"
-              >
+              <Field id="contact_number" label="Student Phone No." required error={errors.contact_number}>
+                <input id="contact_number" type="tel" inputMode="numeric" maxLength={10} className={fieldClass} placeholder="Enter 10-digit mobile number" value={form.contact_number} onChange={(e) => set("contact_number", e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.contact_number} aria-describedby={errors.contact_number ? "contact_number-error" : undefined} />
+              </Field>
+
+              <Field id="email" label="Student Email" required error={errors.email}>
                 <input
                   id="email"
                   type="email"
@@ -467,35 +410,118 @@ function Index() {
                 />
               </Field>
 
-              <Field
-                id="address"
-                label="Address"
-                required
-                error={errors.address}
-                className="sm:col-span-2"
-              >
-                <textarea
-                  id="address"
-                  rows={3}
-                  className={`${fieldClass} min-h-24 resize-y`}
-                  placeholder="Enter your complete address"
-                  value={form.address}
-                  onChange={(e) => set("address", e.target.value)}
-                  aria-invalid={!!errors.address}
-                  aria-describedby={errors.address ? "address-error" : undefined}
-                />
+              <div className="border-border sm:col-span-2 border-t pt-2"><h2 className="font-semibold text-primary">Parents' Details</h2></div>
+              <Field id="father_name" label="Father's Name" required error={errors.father_name}><input id="father_name" type="text" className={fieldClass} placeholder="Enter father's name" value={form.father_name} onChange={(e) => set("father_name", e.target.value)} aria-invalid={!!errors.father_name} /></Field>
+              <Field id="father_phone" label="Father's Phone No." required error={errors.father_phone}><input id="father_phone" type="tel" inputMode="numeric" maxLength={10} className={fieldClass} placeholder="Enter father's phone number" value={form.father_phone} onChange={(e) => set("father_phone", e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.father_phone} /></Field>
+              <Field id="mother_name" label="Mother's Name" required error={errors.mother_name} className="sm:col-span-2"><input id="mother_name" type="text" className={fieldClass} placeholder="Enter mother's name" value={form.mother_name} onChange={(e) => set("mother_name", e.target.value)} aria-invalid={!!errors.mother_name} /></Field>
+
+              <div className="border-border sm:col-span-2 border-t pt-2"><h2 className="font-semibold text-primary">Complete Address</h2></div>
+              <Field id="permanent_address" label="Permanent / Home Town" required error={errors.permanent_address}><textarea id="permanent_address" rows={3} className={`${fieldClass} min-h-24 resize-y`} placeholder="Enter permanent/home-town address" value={form.permanent_address} onChange={(e) => set("permanent_address", e.target.value)} aria-invalid={!!errors.permanent_address} /></Field>
+              <Field id="local_address" label="Local Address" required error={errors.local_address}><textarea id="local_address" rows={3} className={`${fieldClass} min-h-24 resize-y`} placeholder="Enter local address" value={form.local_address} onChange={(e) => set("local_address", e.target.value)} aria-invalid={!!errors.local_address} /></Field>
+
+              <div className="border-border sm:col-span-2 border-t pt-2"><h2 className="font-semibold text-primary">Academic Details</h2></div>
+              <Field id="tenth_percentage" label="10th Marks (%)" required error={errors.tenth_percentage}><input id="tenth_percentage" type="number" min={0} max={100} step="0.01" className={fieldClass} placeholder="Enter 10th percentage" value={form.tenth_percentage} onChange={(e) => set("tenth_percentage", e.target.value)} aria-invalid={!!errors.tenth_percentage} /></Field>
+              <Field id="twelfth_percentage" label="12th Marks (%)" required error={errors.twelfth_percentage}><input id="twelfth_percentage" type="number" min={0} max={100} step="0.01" className={fieldClass} placeholder="Enter 12th percentage" value={form.twelfth_percentage} onChange={(e) => set("twelfth_percentage", e.target.value)} aria-invalid={!!errors.twelfth_percentage} /></Field>
+
+              {semesterNumbers.map((semester) => {
+                const statusKey = `semester_${semester}_status` as keyof FormState;
+                const marksKey = `semester_${semester}_marks` as keyof FormState;
+                const reappearsKey = `semester_${semester}_reappears` as keyof FormState;
+                const status = form[statusKey];
+                return (
+                  <div key={semester} className="grid gap-3 rounded-lg border border-border p-3 sm:col-span-2 sm:grid-cols-3">
+                    <Field
+                      id={statusKey}
+                      label={`Semester ${semester} Status${semester >= 6 ? " (Optional)" : ""}`}
+                      required={semester <= 5}
+                      error={errors[statusKey]}
+                    >
+                      <select
+                        id={statusKey}
+                        className={fieldClass}
+                        value={status}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setForm((current) => ({
+                            ...current,
+                            [statusKey]: value,
+                            [marksKey]:
+                              value === "Result Awaited" || value === ""
+                                ? ""
+                                : current[marksKey],
+                            [reappearsKey]: value === "Backlog" ? current[reappearsKey] : "0",
+                          }));
+                          setErrors((current) => ({ ...current, [statusKey]: undefined, [marksKey]: undefined, [reappearsKey]: undefined }));
+                          setSuccess(false);
+                          setFormError(null);
+                        }}
+                      >
+                        <option value="">Select status</option>
+                        <option value="Clear">Clear</option>
+                        <option value="Backlog">Backlog</option>
+                        <option value="Result Awaited">Result Awaited</option>
+                      </select>
+                    </Field>
+                    <Field id={marksKey} label="Percentage" required={status !== "Result Awaited"} error={errors[marksKey]}><input id={marksKey} type="number" min={0} max={100} step="0.01" className={fieldClass} placeholder={status === "Result Awaited" ? "Not available" : "Marks %"} value={form[marksKey]} disabled={!status || status === "Result Awaited"} onChange={(e) => set(marksKey, e.target.value)} /></Field>
+                    <Field id={reappearsKey} label="No. of Backlogs" required={status === "Backlog"} error={errors[reappearsKey]}><input id={reappearsKey} type="number" min={status === "Backlog" ? 1 : 0} step={1} className={fieldClass} value={form[reappearsKey]} disabled={status !== "Backlog"} onChange={(e) => set(reappearsKey, e.target.value)} /></Field>
+                  </div>
+                );
+              })}
+
+              <Field id="average_percentage" label="Total Percentage (Automatic)"><input id="average_percentage" type="text" className={fieldClass} value={calculatedAverage === null ? "" : calculatedAverage.toFixed(2)} placeholder="Calculated from available semesters" readOnly /></Field>
+              <Field id="total_reappears" label="Total Backlogs (Automatic)"><input id="total_reappears" type="text" className={fieldClass} value={String(calculatedTotalReappears)} readOnly /></Field>
+
+              <Field id="campus_placement" label="Placement Required" required error={errors.campus_placement} className="sm:col-span-2">
+                <select
+                  id="campus_placement"
+                  className={fieldClass}
+                  value={form.campus_placement}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((current) => ({
+                      ...current,
+                      campus_placement: value,
+                      placement_opt_out_reason:
+                        value === "No" ? current.placement_opt_out_reason : "",
+                    }));
+                    setErrors((current) => ({
+                      ...current,
+                      campus_placement: undefined,
+                      placement_opt_out_reason: undefined,
+                    }));
+                    setSuccess(false);
+                    setFormError(null);
+                  }}
+                  aria-invalid={!!errors.campus_placement}
+                >
+                  <option value="">Select Yes or No</option><option value="Yes">Yes</option><option value="No">No</option>
+                </select>
               </Field>
 
-              <Field id="remarks" label="Remarks" error={errors.remarks} className="sm:col-span-2">
-                <textarea
-                  id="remarks"
-                  rows={3}
-                  className={`${fieldClass} min-h-24 resize-y`}
-                  placeholder="Enter any additional information, if applicable"
-                  value={form.remarks}
-                  onChange={(e) => set("remarks", e.target.value)}
-                />
-              </Field>
+              {form.campus_placement === "No" && (
+                <Field
+                  id="placement_opt_out_reason"
+                  label="Reason Placement Is Not Required"
+                  required
+                  error={errors.placement_opt_out_reason}
+                  className="sm:col-span-2"
+                >
+                  <textarea
+                    id="placement_opt_out_reason"
+                    rows={3}
+                    className={`${fieldClass} min-h-24 resize-y`}
+                    placeholder="Enter the reason"
+                    value={form.placement_opt_out_reason}
+                    onChange={(e) => set("placement_opt_out_reason", e.target.value)}
+                    aria-invalid={!!errors.placement_opt_out_reason}
+                    aria-describedby={
+                      errors.placement_opt_out_reason
+                        ? "placement_opt_out_reason-error"
+                        : undefined
+                    }
+                  />
+                </Field>
+              )}
 
               <div className="sm:col-span-2">
                 <button
