@@ -32,6 +32,7 @@ export type Database = {
       placement_students: {
         Row: {
           address: string
+          aadhaar_number: string | null
           backlogs: number
           branch: string
           contact_number: string
@@ -50,6 +51,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          aadhaar_number: string
           backlogs?: number
           branch: string
           contact_number: string
@@ -68,6 +70,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          aadhaar_number?: string | null
           backlogs?: number
           branch?: string
           contact_number?: string

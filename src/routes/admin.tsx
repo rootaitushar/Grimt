@@ -39,6 +39,7 @@ const columns: Array<{ key: keyof Student; label: string }> = [
   { key: "wants_campus_placement", label: "Campus Placement" },
   { key: "placement_opt_out_reason", label: "Opt-out Reason" },
   { key: "contact_number", label: "Contact Number" },
+  { key: "aadhaar_number", label: "Aadhaar Number" },
   { key: "email", label: "Email" },
   { key: "address", label: "Address" },
   { key: "remarks", label: "Remarks" },

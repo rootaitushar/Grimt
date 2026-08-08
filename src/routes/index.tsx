@@ -37,6 +37,7 @@ type FormState = {
   campus_placement: string;
   placement_opt_out_reason: string;
   contact_number: string;
+  aadhaar_number: string;
   email: string;
   address: string;
   remarks: string;
@@ -53,6 +54,7 @@ const emptyForm: FormState = {
   campus_placement: "",
   placement_opt_out_reason: "",
   contact_number: "",
+  aadhaar_number: "",
   email: "",
   address: "",
   remarks: "",
@@ -130,6 +132,9 @@ function Index() {
     if (!/^[6-9]\d{9}$/.test(form.contact_number.replace(/\D/g, "")))
       e.contact_number = "Please enter a valid 10-digit mobile number.";
 
+    if (!/^[2-9]\d{11}$/.test(form.aadhaar_number.replace(/\D/g, "")))
+      e.aadhaar_number = "Please enter a valid 12-digit Aadhaar number.";
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim()))
       e.email = "Please enter a valid email address.";
 
@@ -158,6 +163,7 @@ function Index() {
         placement_opt_out_reason:
           form.campus_placement === "No" ? form.placement_opt_out_reason.trim() : null,
         contact_number: form.contact_number.replace(/\D/g, ""),
+        aadhaar_number: form.aadhaar_number.replace(/\D/g, ""),
         email: form.email.trim(),
         address: form.address.trim(),
         remarks: form.remarks.trim() || null,
@@ -417,6 +423,28 @@ function Index() {
                   onChange={(e) => set("contact_number", e.target.value.replace(/\D/g, ""))}
                   aria-invalid={!!errors.contact_number}
                   aria-describedby={errors.contact_number ? "contact_number-error" : undefined}
+                />
+              </Field>
+
+              <Field
+                id="aadhaar_number"
+                label="Aadhaar No."
+                required
+                error={errors.aadhaar_number}
+              >
+                <input
+                  id="aadhaar_number"
+                  name="aadhaar_number"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={12}
+                  autoComplete="off"
+                  className={fieldClass}
+                  placeholder="Enter 12-digit Aadhaar number"
+                  value={form.aadhaar_number}
+                  onChange={(e) => set("aadhaar_number", e.target.value.replace(/\D/g, ""))}
+                  aria-invalid={!!errors.aadhaar_number}
+                  aria-describedby={errors.aadhaar_number ? "aadhaar_number-error" : undefined}
                 />
               </Field>
 
