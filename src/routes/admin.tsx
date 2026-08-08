@@ -78,24 +78,37 @@ function escapeXml(value: unknown) {
     .replaceAll("'", "&apos;");
 }
 
+function semesterExportValue(student: Student, semester: 1 | 2 | 3 | 4 | 5 | 6 | 7) {
+  const status = student[`semester_${semester}_status`];
+  if (!status) return "";
+  if (status === "Result Awaited") return status;
+
+  const marks = student[`semester_${semester}_marks`];
+  const reappears = student[`semester_${semester}_reappears`];
+  return `${status}\n${marks ?? ""}%\nRE: ${reappears}`;
+}
+
 function exportToExcel(rows: Student[]) {
-  const header = ["S.No", ...columns.map(({ label }) => label)]
-    .map((label) => `<Cell><Data ss:Type="String">${escapeXml(label)}</Data></Cell>`)
-    .join("");
   const body = rows
     .map(
       (student, index) =>
-        `<Row><Cell><Data ss:Type="Number">${index + 1}</Data></Cell>${columns
-          .map(({ key }) => {
-            const raw = key === "created_at"
-              ? new Date(student[key]).toLocaleString("en-IN")
-              : key === "wants_campus_placement"
-                ? student[key] ? "Yes" : "No"
-                : student[key];
-            const type = typeof raw === "number" ? "Number" : "String";
-            return `<Cell><Data ss:Type="${type}">${escapeXml(raw)}</Data></Cell>`;
-          })
-          .join("")}</Row>`,
+        `<Row ss:AutoFitHeight="1">
+          <Cell ss:StyleID="BodyCenter"><Data ss:Type="Number">${index + 1}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.roll_number)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.student_name)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.aadhaar_number)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(`${student.contact_number}\n${student.email}`)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(`${student.father_name}\n${student.father_phone ?? ""}`)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.mother_name)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.address)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.local_address)}</Data></Cell>
+          <Cell ss:StyleID="BodyCenter"><Data ss:Type="String">${student.tenth_percentage ?? ""}</Data></Cell>
+          <Cell ss:StyleID="BodyCenter"><Data ss:Type="String">${student.twelfth_percentage ?? ""}</Data></Cell>
+          ${([1, 2, 3, 4, 5, 6, 7] as const).map((semester) => `<Cell ss:StyleID="BodyCenter"><Data ss:Type="String">${escapeXml(semesterExportValue(student, semester))}</Data></Cell>`).join("")}
+          <Cell ss:StyleID="BodyCenter"><Data ss:Type="String">${escapeXml(`${student.average_percentage ?? ""}%\nTOTAL RE: ${student.total_reappears}`)}</Data></Cell>
+          <Cell ss:StyleID="BodyCenter"><Data ss:Type="String">${student.wants_campus_placement ? "YES" : "NO"}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.placement_opt_out_reason)}</Data></Cell>
+        </Row>`,
     )
     .join("");
   const workbook = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
@@ -103,7 +116,41 @@ function exportToExcel(rows: Student[]) {
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Worksheet ss:Name="Placement Students"><Table><Row>${header}</Row>${body}</Table></Worksheet>
+ <Styles>
+  <Style ss:ID="Header"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="Body"><Alignment ss:Vertical="Top" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="BodyCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+ </Styles>
+ <Worksheet ss:Name="Placement Students"><Table>
+  <Column ss:Width="42"/><Column ss:Width="68"/><Column ss:Width="145"/><Column ss:Width="90"/><Column ss:Width="125"/><Column ss:Width="100"/><Column ss:Width="100"/><Column ss:Width="155"/><Column ss:Width="120"/><Column ss:Width="65"/><Column ss:Width="65"/>
+  <Column ss:Width="72" ss:Span="6"/><Column ss:Width="85"/><Column ss:Width="95"/><Column ss:Width="155"/>
+  <Row ss:Height="28">
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">S.No</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Roll No</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Name of the student</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Aadhar ID</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Student Phone number / Email</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Father&apos;s Detail</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Mother&apos;s Detail</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeAcross="1"><Data ss:Type="String">Complete Address of student</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">10th Marks</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">12th Marks</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeAcross="7"><Data ss:Type="String">Course Marks / No. of reappears semester wise</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Placement Required YES/NO</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Reason if placement not required</Data></Cell>
+  </Row>
+  <Row ss:Height="42">
+   <Cell ss:Index="6" ss:StyleID="Header"><Data ss:Type="String">Name / Phone</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Name</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Permanent/Home town</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Local</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">%tage</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">%tage</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">1st</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">2nd</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">3rd</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">4th</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">5th</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">6th</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">7th</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Avg % / TOTAL RE</Data></Cell>
+  </Row>
+  ${body}
+ </Table></Worksheet>
 </Workbook>`;
   const blob = new Blob([workbook], { type: "application/vnd.ms-excel;charset=utf-8" });
   const url = URL.createObjectURL(blob);
