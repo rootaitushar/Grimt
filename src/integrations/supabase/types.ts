@@ -29,6 +29,81 @@ export type Database = {
         }
         Relationships: []
       }
+      placement_applications: {
+        Row: {
+          applied_at: string
+          id: string
+          job_id: string
+          status: string
+          student_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          id?: string
+          job_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          id?: string
+          job_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      placement_jobs: {
+        Row: {
+          application_deadline: string | null
+          company_name: string
+          created_at: string
+          created_by: string
+          description: string
+          employment_type: string | null
+          id: string
+          is_published: boolean
+          location: string | null
+          salary_package: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          application_deadline?: string | null
+          company_name: string
+          created_at?: string
+          created_by: string
+          description: string
+          employment_type?: string | null
+          id?: string
+          is_published?: boolean
+          location?: string | null
+          salary_package?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          application_deadline?: string | null
+          company_name?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          employment_type?: string | null
+          id?: string
+          is_published?: boolean
+          location?: string | null
+          salary_package?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       placement_students: {
         Row: {
           address: string
@@ -75,6 +150,7 @@ export type Database = {
           total_reappears: number
           twelfth_percentage: number | null
           updated_at: string
+          user_id: string | null
           wants_campus_placement: boolean
           placement_opt_out_reason: string | null
         }
@@ -83,7 +159,7 @@ export type Database = {
           aadhaar_number: string
           average_percentage?: number | null
           backlogs?: number
-          branch?: string | null
+          branch: string
           contact_number: string
           created_at?: string
           email: string
@@ -123,6 +199,7 @@ export type Database = {
           total_reappears?: number
           twelfth_percentage?: number | null
           updated_at?: string
+          user_id?: string | null
           wants_campus_placement?: boolean
           placement_opt_out_reason?: string | null
         }
@@ -171,8 +248,39 @@ export type Database = {
           total_reappears?: number
           twelfth_percentage?: number | null
           updated_at?: string
+          user_id?: string | null
           wants_campus_placement?: boolean
           placement_opt_out_reason?: string | null
+        }
+        Relationships: []
+      }
+      student_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string | null
+          message: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          message: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          message?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -181,7 +289,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      link_student_profile: { Args: Record<PropertyKey, never>; Returns: string }
     }
     Enums: {
       [_ in never]: never

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  BriefcaseBusiness,
   Download,
   GraduationCap,
   Loader2,
@@ -8,6 +9,7 @@ import {
   LogOut,
   RefreshCw,
   Search,
+  Send,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -27,10 +29,12 @@ export const Route = createFileRoute("/admin")({
 });
 
 type Student = Tables<"placement_students">;
+type Job = Tables<"placement_jobs">;
 
 const columns: Array<{ key: keyof Student; label: string }> = [
   { key: "roll_number", label: "Roll Number" },
   { key: "student_name", label: "Name of Student" },
+  { key: "branch", label: "Branch" },
   { key: "aadhaar_number", label: "Aadhaar Number" },
   { key: "contact_number", label: "Student Phone" },
   { key: "email", label: "Student Email" },
@@ -161,6 +165,100 @@ function exportToExcel(rows: Student[]) {
   URL.revokeObjectURL(url);
 }
 
+function JobManagement({ session }: { session: Session }) {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    company_name: "",
+    title: "",
+    description: "",
+    location: "",
+    employment_type: "Full-time",
+    salary_package: "",
+    application_deadline: "",
+  });
+
+  const loadJobs = useCallback(async () => {
+    const { data } = await supabase
+      .from("placement_jobs")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setJobs(data ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadJobs();
+  }, [loadJobs]);
+
+  const publishJob = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage(null);
+    const { data, error } = await supabase
+      .from("placement_jobs")
+      .insert({
+        company_name: form.company_name.trim(),
+        title: form.title.trim(),
+        description: form.description.trim(),
+        location: form.location.trim() || null,
+        employment_type: form.employment_type,
+        salary_package: form.salary_package.trim() || null,
+        application_deadline: form.application_deadline
+          ? new Date(form.application_deadline).toISOString()
+          : null,
+        created_by: session.user.id,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      setMessage("Could not publish this job. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    const { error: emailError } = await supabase.functions.invoke("notify-job-posting", {
+      body: { job_id: data.id },
+    });
+    setMessage(
+      emailError
+        ? "Job published and visible to students. Email delivery is not configured yet."
+        : "Job published. Student dashboard and email notifications were created.",
+    );
+    setForm({ company_name: "", title: "", description: "", location: "", employment_type: "Full-time", salary_package: "", application_deadline: "" });
+    await loadJobs();
+    setSubmitting(false);
+  };
+
+  return (
+    <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.75fr)]">
+      <form onSubmit={publishJob} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex items-center gap-2"><BriefcaseBusiness className="size-5 text-primary" /><h2 className="text-lg font-bold">Publish Placement Job</h2></div>
+        <p className="mt-1 text-sm text-muted-foreground">The job appears in every placement student’s dashboard immediately.</p>
+        {message && <div role="status" className="mt-4 rounded-lg border border-border bg-secondary/50 p-3 text-sm">{message}</div>}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div><label className="text-sm font-medium" htmlFor="job-company">Company</label><input id="job-company" required value={form.company_name} onChange={(event) => setForm((current) => ({ ...current, company_name: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5" /></div>
+          <div><label className="text-sm font-medium" htmlFor="job-title">Job title</label><input id="job-title" required value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5" /></div>
+          <div><label className="text-sm font-medium" htmlFor="job-location">Location</label><input id="job-location" value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5" /></div>
+          <div><label className="text-sm font-medium" htmlFor="job-type">Employment type</label><select id="job-type" value={form.employment_type} onChange={(event) => setForm((current) => ({ ...current, employment_type: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5"><option>Full-time</option><option>Internship</option><option>Apprenticeship</option><option>Contract</option></select></div>
+          <div><label className="text-sm font-medium" htmlFor="job-package">Package / CTC</label><input id="job-package" value={form.salary_package} onChange={(event) => setForm((current) => ({ ...current, salary_package: event.target.value }))} placeholder="e.g. ₹5 LPA" className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5" /></div>
+          <div><label className="text-sm font-medium" htmlFor="job-deadline">Application deadline</label><input id="job-deadline" type="datetime-local" value={form.application_deadline} onChange={(event) => setForm((current) => ({ ...current, application_deadline: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5" /></div>
+          <div className="sm:col-span-2"><label className="text-sm font-medium" htmlFor="job-description">Job description</label><textarea id="job-description" required rows={7} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} className="mt-1.5 w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5" placeholder="Responsibilities, eligibility, selection process and required documents" /></div>
+        </div>
+        <button type="submit" disabled={submitting} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-5 font-semibold text-primary-foreground disabled:opacity-60">{submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} Publish and notify students</button>
+      </form>
+
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-lg font-bold">Published Jobs</h2>
+        <div className="mt-4 space-y-3">{loading ? <Loader2 className="size-5 animate-spin" /> : jobs.length === 0 ? <p className="text-sm text-muted-foreground">No jobs published yet.</p> : jobs.map((job) => <article key={job.id} className="rounded-xl border border-border p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{job.title}</p><p className="text-sm text-primary">{job.company_name}</p></div><span className="rounded-full bg-success-soft px-2 py-1 text-xs font-medium text-success">Published</span></div><p className="mt-2 line-clamp-3 whitespace-pre-line text-sm text-muted-foreground">{job.description}</p><div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">{job.location && <span>{job.location}</span>}{job.salary_package && <span>• {job.salary_package}</span>}{job.application_deadline && <span>• Apply by {new Date(job.application_deadline).toLocaleString("en-IN")}</span>}</div></article>)}</div>
+      </div>
+    </section>
+  );
+}
+
 function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -235,7 +333,7 @@ function AdminPage() {
     const needle = search.trim().toLowerCase();
     if (!needle) return students;
     return students.filter((student) =>
-      [student.student_name, student.roll_number, student.email, student.contact_number]
+      [student.student_name, student.roll_number, student.branch, student.email, student.contact_number]
         .join(" ")
         .toLowerCase()
         .includes(needle),
@@ -301,6 +399,8 @@ function AdminPage() {
           <div className="flex items-center gap-3"><img src="/GRIMT-Logo.png" alt="GRIMT logo" className="h-20 w-16 object-contain" /><div><p className="text-xs font-semibold uppercase tracking-wide text-brand-red">Training &amp; Placement</p><h1 className="text-xl font-bold">Student Submissions</h1></div></div>
           <div className="flex flex-wrap gap-2"><Link to="/" className="inline-flex min-h-10 items-center rounded-lg border border-input px-4 text-sm font-medium">Open form</Link><button onClick={() => void supabase.auth.signOut()} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 text-sm font-medium"><LogOut className="size-4" /> Sign out</button></div>
         </header>
+
+        <JobManagement session={session} />
 
         <section className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-border bg-card p-5"><Users className="size-5 text-primary" /><p className="mt-3 text-3xl font-bold">{students.length}</p><p className="text-sm text-muted-foreground">Total submissions</p></div>

@@ -1,1 +1,4 @@
 project_id = "yybjmedtsaveodupofqh"
+
+[functions.notify-job-posting]
+verify_jwt = true

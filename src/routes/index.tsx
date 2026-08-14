@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/")({
 type FormState = {
   student_name: string;
   roll_number: string;
+  branch: string;
   aadhaar_number: string;
   contact_number: string;
   email: string;
@@ -67,6 +68,7 @@ type FormState = {
 const emptyForm: FormState = {
   student_name: "",
   roll_number: "",
+  branch: "",
   aadhaar_number: "",
   contact_number: "",
   email: "",
@@ -172,6 +174,7 @@ function Index() {
     const e: Errors = {};
     if (!form.student_name.trim()) e.student_name = "Please enter your name.";
     if (!form.roll_number.trim()) e.roll_number = "Please enter your roll number.";
+    if (!form.branch.trim()) e.branch = "Please enter your branch.";
 
     if (!/^[6-9]\d{9}$/.test(form.contact_number.replace(/\D/g, "")))
       e.contact_number = "Please enter a valid 10-digit mobile number.";
@@ -231,6 +234,7 @@ function Index() {
       const { error } = await supabase.from("placement_students").insert({
         student_name: form.student_name.trim(),
         roll_number: form.roll_number.trim(),
+        branch: form.branch.trim(),
         aadhaar_number: form.aadhaar_number.replace(/\D/g, ""),
         contact_number: form.contact_number.replace(/\D/g, ""),
         email: form.email.trim(),
@@ -368,6 +372,19 @@ function Index() {
                   onChange={(e) => set("roll_number", e.target.value)}
                   aria-invalid={!!errors.roll_number}
                   aria-describedby={errors.roll_number ? "roll_number-error" : undefined}
+                />
+              </Field>
+
+              <Field id="branch" label="Branch" required error={errors.branch}>
+                <input
+                  id="branch"
+                  type="text"
+                  className={fieldClass}
+                  placeholder="Enter your branch, e.g. B.Tech CSE or BCA"
+                  value={form.branch}
+                  onChange={(e) => set("branch", e.target.value)}
+                  aria-invalid={!!errors.branch}
+                  aria-describedby={errors.branch ? "branch-error" : undefined}
                 />
               </Field>
 
@@ -551,6 +568,14 @@ function Index() {
           <p className="mt-1 text-xs text-muted-foreground">
             Student information will be used only for placement-related activities.
           </p>
+          <div className="mt-3 flex justify-center gap-4 text-sm">
+            <Link to="/student" className="font-medium text-primary hover:underline">
+              Student dashboard
+            </Link>
+            <Link to="/admin" className="font-medium text-primary hover:underline">
+              Faculty dashboard
+            </Link>
+          </div>
         </footer>
       </div>
     </main>
