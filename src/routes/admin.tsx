@@ -276,7 +276,7 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
-  const [branchFilter, setBranchFilter] = useState("all");
+  const [branchFilters, setBranchFilters] = useState<string[]>([]);
   const [academicFilter, setAcademicFilter] = useState("all");
   const [backlogFilter, setBacklogFilter] = useState("all");
   const [placementFilter, setPlacementFilter] = useState("all");
@@ -359,7 +359,10 @@ function AdminPage() {
           .toLowerCase()
           .includes(needle)
       ) return false;
-      if (branchFilter !== "all" && student.branch?.toLowerCase() !== branchFilter.toLowerCase()) return false;
+      if (
+        branchFilters.length > 0 &&
+        !branchFilters.some((branch) => student.branch?.toLowerCase() === branch.toLowerCase())
+      ) return false;
       if (placementFilter === "yes" && !student.wants_campus_placement) return false;
       if (placementFilter === "no" && student.wants_campus_placement) return false;
       if (lateralFilter === "yes" && !student.is_lateral_entry) return false;
@@ -395,11 +398,11 @@ function AdminPage() {
       if (sortBy === "average_low") return (first.average_percentage ?? 101) - (second.average_percentage ?? 101);
       return second.created_at.localeCompare(first.created_at);
     });
-  }, [academicFilter, backlogFilter, branchFilter, lateralFilter, placementFilter, search, sortBy, students]);
+  }, [academicFilter, backlogFilter, branchFilters, lateralFilter, placementFilter, search, sortBy, students]);
 
   const clearFilters = () => {
     setSearch("");
-    setBranchFilter("all");
+    setBranchFilters([]);
     setAcademicFilter("all");
     setBacklogFilter("all");
     setPlacementFilter("all");
@@ -484,7 +487,7 @@ function AdminPage() {
             <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-3">
               <div className="mb-3 flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Filter className="size-4 text-primary" /><p className="text-sm font-semibold">Filter and sort student data</p></div><button type="button" onClick={clearFilters} className="text-xs font-medium text-primary hover:underline">Clear all</button></div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                <div><label htmlFor="filter-branch" className="text-xs font-medium text-muted-foreground">Branch</label><select id="filter-branch" value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">All branches</option>{branches.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select></div>
+                <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2"><span className="text-xs font-medium text-muted-foreground">Branches (select multiple)</span><div className="mt-1 flex min-h-10 flex-wrap gap-2 rounded-lg border border-input bg-background p-2">{branches.map((branch) => { const selected = branchFilters.includes(branch); return <label key={branch} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/50"}`}><input type="checkbox" className="sr-only" checked={selected} onChange={() => setBranchFilters((current) => selected ? current.filter((item) => item !== branch) : [...current, branch])} />{branch}</label>; })}{branches.length === 0 && <span className="px-1 py-1 text-xs text-muted-foreground">No branch data</span>}</div><p className="mt-1 text-[11px] text-muted-foreground">No selection means all branches.</p></div>
                 <div><label htmlFor="filter-academic" className="text-xs font-medium text-muted-foreground">Academic result</label><select id="filter-academic" value={academicFilter} onChange={(event) => setAcademicFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">All results</option><option value="clear">All semesters clear</option><option value="backlog">Has backlog semester</option><option value="awaited">Result awaited</option></select></div>
                 <div><label htmlFor="filter-backlogs" className="text-xs font-medium text-muted-foreground">Total backlogs</label><select id="filter-backlogs" value={backlogFilter} onChange={(event) => setBacklogFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">Any number</option><option value="zero">0 backlogs</option><option value="one">1 backlog</option><option value="two">2 backlogs</option><option value="three_plus">3 or more</option></select></div>
                 <div><label htmlFor="filter-placement" className="text-xs font-medium text-muted-foreground">Placement required</label><select id="filter-placement" value={placementFilter} onChange={(event) => setPlacementFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">Yes and No</option><option value="yes">Yes</option><option value="no">No</option></select></div>

@@ -383,6 +383,7 @@ function Index() {
                 <input
                   id="branch"
                   type="text"
+                  list="placement-branch-options"
                   className={fieldClass}
                   placeholder="Enter your branch, e.g. B.Tech CSE or BCA"
                   value={form.branch}
@@ -390,6 +391,12 @@ function Index() {
                   aria-invalid={!!errors.branch}
                   aria-describedby={errors.branch ? "branch-error" : undefined}
                 />
+                <datalist id="placement-branch-options">
+                  <option value="B.Tech" />
+                  <option value="BCA" />
+                  <option value="BBA" />
+                  <option value="DMLT" />
+                </datalist>
               </Field>
 
               <Field id="lateral_entry" label="Lateral Entry" required>
