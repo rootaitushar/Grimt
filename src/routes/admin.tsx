@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BriefcaseBusiness,
   Download,
+  Filter,
   GraduationCap,
   Loader2,
   LogIn,
@@ -275,6 +276,12 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState("all");
+  const [academicFilter, setAcademicFilter] = useState("all");
+  const [backlogFilter, setBacklogFilter] = useState("all");
+  const [placementFilter, setPlacementFilter] = useState("all");
+  const [lateralFilter, setLateralFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   const loadStudents = useCallback(async () => {
     setLoading(true);
@@ -334,16 +341,71 @@ function AdminPage() {
     return () => data.subscription.unsubscribe();
   }, [checkAdmin]);
 
+  const branches = useMemo(
+    () =>
+      Array.from(
+        new Set(students.map((student) => student.branch?.trim()).filter((branch): branch is string => !!branch)),
+      ).sort((first, second) => first.localeCompare(second, undefined, { sensitivity: "base" })),
+    [students],
+  );
+
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return students;
-    return students.filter((student) =>
-      [student.student_name, student.roll_number, student.branch, student.email, student.contact_number]
-        .join(" ")
-        .toLowerCase()
-        .includes(needle),
-    );
-  }, [search, students]);
+    const result = students.filter((student) => {
+      if (
+        needle &&
+        ![student.student_name, student.roll_number, student.branch, student.email, student.contact_number]
+          .join(" ")
+          .toLowerCase()
+          .includes(needle)
+      ) return false;
+      if (branchFilter !== "all" && student.branch?.toLowerCase() !== branchFilter.toLowerCase()) return false;
+      if (placementFilter === "yes" && !student.wants_campus_placement) return false;
+      if (placementFilter === "no" && student.wants_campus_placement) return false;
+      if (lateralFilter === "yes" && !student.is_lateral_entry) return false;
+      if (lateralFilter === "no" && student.is_lateral_entry) return false;
+      if (backlogFilter === "zero" && student.total_reappears !== 0) return false;
+      if (backlogFilter === "one" && student.total_reappears !== 1) return false;
+      if (backlogFilter === "two" && student.total_reappears !== 2) return false;
+      if (backlogFilter === "three_plus" && student.total_reappears < 3) return false;
+
+      const statuses = [
+        student.semester_1_status,
+        student.semester_2_status,
+        student.semester_3_status,
+        student.semester_4_status,
+        student.semester_5_status,
+        student.semester_6_status,
+        student.semester_7_status,
+      ].filter((status): status is string => !!status);
+      if (academicFilter === "clear" && (statuses.length === 0 || !statuses.every((status) => status === "Clear"))) return false;
+      if (academicFilter === "backlog" && !statuses.includes("Backlog")) return false;
+      if (academicFilter === "awaited" && !statuses.includes("Result Awaited")) return false;
+      return true;
+    });
+
+    return result.sort((first, second) => {
+      if (sortBy === "oldest") return first.created_at.localeCompare(second.created_at);
+      if (sortBy === "name") return first.student_name.localeCompare(second.student_name, undefined, { sensitivity: "base" });
+      if (sortBy === "roll") return first.roll_number.localeCompare(second.roll_number, undefined, { numeric: true });
+      if (sortBy === "branch") return (first.branch ?? "").localeCompare(second.branch ?? "", undefined, { sensitivity: "base" });
+      if (sortBy === "backlogs_low") return first.total_reappears - second.total_reappears;
+      if (sortBy === "backlogs_high") return second.total_reappears - first.total_reappears;
+      if (sortBy === "average_high") return (second.average_percentage ?? -1) - (first.average_percentage ?? -1);
+      if (sortBy === "average_low") return (first.average_percentage ?? 101) - (second.average_percentage ?? 101);
+      return second.created_at.localeCompare(first.created_at);
+    });
+  }, [academicFilter, backlogFilter, branchFilter, lateralFilter, placementFilter, search, sortBy, students]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setBranchFilter("all");
+    setAcademicFilter("all");
+    setBacklogFilter("all");
+    setPlacementFilter("all");
+    setLateralFilter("all");
+    setSortBy("newest");
+  };
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -413,15 +475,29 @@ function AdminPage() {
         </section>
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-md"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, roll no., email or phone..." className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-ring/40" /></div>
-            <div className="flex gap-2"><button onClick={() => void loadStudents()} disabled={loading} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 text-sm font-medium disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh</button><button onClick={() => exportToExcel(filtered)} disabled={filtered.length === 0} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"><Download className="size-4" /> Download Excel</button></div>
+          <div className="border-b border-border p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:max-w-md"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, roll no., branch, email or phone..." className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-ring/40" /></div>
+              <div className="flex flex-wrap gap-2"><button onClick={() => void loadStudents()} disabled={loading} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 text-sm font-medium disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh</button><button onClick={() => exportToExcel(filtered)} disabled={filtered.length === 0} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"><Download className="size-4" /> Download filtered Excel ({filtered.length})</button></div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-3">
+              <div className="mb-3 flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Filter className="size-4 text-primary" /><p className="text-sm font-semibold">Filter and sort student data</p></div><button type="button" onClick={clearFilters} className="text-xs font-medium text-primary hover:underline">Clear all</button></div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                <div><label htmlFor="filter-branch" className="text-xs font-medium text-muted-foreground">Branch</label><select id="filter-branch" value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">All branches</option>{branches.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select></div>
+                <div><label htmlFor="filter-academic" className="text-xs font-medium text-muted-foreground">Academic result</label><select id="filter-academic" value={academicFilter} onChange={(event) => setAcademicFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">All results</option><option value="clear">All semesters clear</option><option value="backlog">Has backlog semester</option><option value="awaited">Result awaited</option></select></div>
+                <div><label htmlFor="filter-backlogs" className="text-xs font-medium text-muted-foreground">Total backlogs</label><select id="filter-backlogs" value={backlogFilter} onChange={(event) => setBacklogFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">Any number</option><option value="zero">0 backlogs</option><option value="one">1 backlog</option><option value="two">2 backlogs</option><option value="three_plus">3 or more</option></select></div>
+                <div><label htmlFor="filter-placement" className="text-xs font-medium text-muted-foreground">Placement required</label><select id="filter-placement" value={placementFilter} onChange={(event) => setPlacementFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">Yes and No</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                <div><label htmlFor="filter-lateral" className="text-xs font-medium text-muted-foreground">Lateral entry</label><select id="filter-lateral" value={lateralFilter} onChange={(event) => setLateralFilter(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="all">Yes and No</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                <div><label htmlFor="sort-students" className="text-xs font-medium text-muted-foreground">Sort by</label><select id="sort-students" value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"><option value="newest">Newest submission</option><option value="oldest">Oldest submission</option><option value="name">Name A–Z</option><option value="roll">Roll number</option><option value="branch">Branch A–Z</option><option value="backlogs_low">Backlogs: low to high</option><option value="backlogs_high">Backlogs: high to low</option><option value="average_high">Average: high to low</option><option value="average_low">Average: low to high</option></select></div>
+              </div>
+            </div>
           </div>
           {error && <div role="alert" className="m-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] text-left text-sm">
               <thead className="bg-secondary/70 text-xs uppercase text-muted-foreground"><tr><th className="whitespace-nowrap px-4 py-3 font-semibold">S.No</th>{columns.map((column) => <th key={column.key} className="whitespace-nowrap px-4 py-3 font-semibold">{column.label}</th>)}</tr></thead>
-              <tbody className="divide-y divide-border">{loading && students.length === 0 ? <tr><td colSpan={columns.length + 1} className="px-4 py-16 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 size-6 animate-spin" />Loading submissions...</td></tr> : filtered.length === 0 ? <tr><td colSpan={columns.length + 1} className="px-4 py-16 text-center text-muted-foreground">No student submissions found.</td></tr> : filtered.map((student, index) => <tr key={student.id} className="hover:bg-secondary/30"><td className="px-4 py-3 align-top">{index + 1}</td>{columns.map(({ key }) => <td key={key} className="max-w-64 px-4 py-3 align-top"><span className="line-clamp-3">{key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : key === "wants_campus_placement" ? student[key] ? "Yes" : "No" : String(student[key] ?? "—")}</span></td>)}</tr>)}</tbody>
+              <tbody className="divide-y divide-border">{loading && students.length === 0 ? <tr><td colSpan={columns.length + 1} className="px-4 py-16 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 size-6 animate-spin" />Loading submissions...</td></tr> : filtered.length === 0 ? <tr><td colSpan={columns.length + 1} className="px-4 py-16 text-center text-muted-foreground">No student submissions found.</td></tr> : filtered.map((student, index) => <tr key={student.id} className="hover:bg-secondary/30"><td className="px-4 py-3 align-top">{index + 1}</td>{columns.map(({ key }) => <td key={key} className="max-w-64 px-4 py-3 align-top"><span className="line-clamp-3">{key === "created_at" ? new Date(student[key]).toLocaleString("en-IN") : key === "wants_campus_placement" || key === "is_lateral_entry" ? student[key] ? "Yes" : "No" : String(student[key] ?? "—")}</span></td>)}</tr>)}</tbody>
             </table>
           </div>
           <div className="border-t border-border px-4 py-3 text-sm text-muted-foreground">Showing {filtered.length} of {students.length} records</div>
