@@ -117,6 +117,7 @@ export type Database = {
           father_name: string
           father_phone: string | null
           id: string
+          is_lateral_entry: boolean
           local_address: string | null
           mother_name: string | null
           mother_phone: string | null
@@ -166,6 +167,7 @@ export type Database = {
           father_name: string
           father_phone?: string | null
           id?: string
+          is_lateral_entry?: boolean
           local_address?: string | null
           mother_name?: string | null
           mother_phone?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           father_name?: string
           father_phone?: string | null
           id?: string
+          is_lateral_entry?: boolean
           local_address?: string | null
           mother_name?: string | null
           mother_phone?: string | null

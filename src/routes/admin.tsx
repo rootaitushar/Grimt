@@ -35,6 +35,7 @@ const columns: Array<{ key: keyof Student; label: string }> = [
   { key: "roll_number", label: "Roll Number" },
   { key: "student_name", label: "Name of Student" },
   { key: "branch", label: "Branch" },
+  { key: "is_lateral_entry", label: "Lateral Entry" },
   { key: "aadhaar_number", label: "Aadhaar Number" },
   { key: "contact_number", label: "Student Phone" },
   { key: "email", label: "Student Email" },
@@ -101,6 +102,8 @@ function exportToExcel(rows: Student[]) {
           <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.roll_number)}</Data></Cell>
           <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.student_name)}</Data></Cell>
           <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.aadhaar_number)}</Data></Cell>
+          <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.branch)}</Data></Cell>
+          <Cell ss:StyleID="BodyCenter"><Data ss:Type="String">${student.is_lateral_entry ? "YES" : "NO"}</Data></Cell>
           <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(`${student.contact_number}\n${student.email}`)}</Data></Cell>
           <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(`${student.father_name}\n${student.father_phone ?? ""}`)}</Data></Cell>
           <Cell ss:StyleID="Body"><Data ss:Type="String">${escapeXml(student.mother_name)}</Data></Cell>
@@ -126,13 +129,15 @@ function exportToExcel(rows: Student[]) {
   <Style ss:ID="BodyCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
  </Styles>
  <Worksheet ss:Name="Placement Students"><Table>
-  <Column ss:Width="42"/><Column ss:Width="68"/><Column ss:Width="145"/><Column ss:Width="90"/><Column ss:Width="125"/><Column ss:Width="100"/><Column ss:Width="100"/><Column ss:Width="155"/><Column ss:Width="120"/><Column ss:Width="65"/><Column ss:Width="65"/>
+  <Column ss:Width="42"/><Column ss:Width="68"/><Column ss:Width="145"/><Column ss:Width="90"/><Column ss:Width="90"/><Column ss:Width="75"/><Column ss:Width="125"/><Column ss:Width="100"/><Column ss:Width="100"/><Column ss:Width="155"/><Column ss:Width="120"/><Column ss:Width="65"/><Column ss:Width="65"/>
   <Column ss:Width="72" ss:Span="6"/><Column ss:Width="85"/><Column ss:Width="95"/><Column ss:Width="155"/>
   <Row ss:Height="28">
    <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">S.No</Data></Cell>
    <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Roll No</Data></Cell>
    <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Name of the student</Data></Cell>
    <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Aadhar ID</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Branch</Data></Cell>
+   <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Lateral Entry YES/NO</Data></Cell>
    <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Student Phone number / Email</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Father&apos;s Detail</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Mother&apos;s Detail</Data></Cell>
@@ -144,7 +149,7 @@ function exportToExcel(rows: Student[]) {
    <Cell ss:StyleID="Header" ss:MergeDown="1"><Data ss:Type="String">Reason if placement not required</Data></Cell>
   </Row>
   <Row ss:Height="42">
-   <Cell ss:Index="6" ss:StyleID="Header"><Data ss:Type="String">Name / Phone</Data></Cell>
+   <Cell ss:Index="8" ss:StyleID="Header"><Data ss:Type="String">Name / Phone</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Name</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Permanent/Home town</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Local</Data></Cell>

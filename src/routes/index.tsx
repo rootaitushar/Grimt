@@ -30,6 +30,7 @@ type FormState = {
   student_name: string;
   roll_number: string;
   branch: string;
+  lateral_entry: string;
   aadhaar_number: string;
   contact_number: string;
   email: string;
@@ -69,6 +70,7 @@ const emptyForm: FormState = {
   student_name: "",
   roll_number: "",
   branch: "",
+  lateral_entry: "No",
   aadhaar_number: "",
   contact_number: "",
   email: "",
@@ -207,6 +209,7 @@ function Index() {
       const status = form[statusKey];
       const marks = Number(form[marksKey]);
       const reappears = Number(form[reappearsKey]);
+      if (form.lateral_entry === "Yes" && semester <= 2) continue;
       if (!status && semester <= 4) e[statusKey] = "Please select the semester result status.";
       if (!status) continue;
       if (status !== "Result Awaited" && (form[marksKey] === "" || marks < 0 || marks > 100))
@@ -235,6 +238,7 @@ function Index() {
         student_name: form.student_name.trim(),
         roll_number: form.roll_number.trim(),
         branch: form.branch.trim(),
+        is_lateral_entry: form.lateral_entry === "Yes",
         aadhaar_number: form.aadhaar_number.replace(/\D/g, ""),
         contact_number: form.contact_number.replace(/\D/g, ""),
         email: form.email.trim(),
@@ -245,10 +249,10 @@ function Index() {
         local_address: form.local_address.trim(),
         tenth_percentage: Number(form.tenth_percentage),
         twelfth_percentage: Number(form.twelfth_percentage),
-        semester_1_status: form.semester_1_status,
+        semester_1_status: form.lateral_entry === "Yes" ? null : form.semester_1_status,
         semester_1_marks: form.semester_1_marks ? Number(form.semester_1_marks) : null,
         semester_1_reappears: Number(form.semester_1_reappears),
-        semester_2_status: form.semester_2_status,
+        semester_2_status: form.lateral_entry === "Yes" ? null : form.semester_2_status,
         semester_2_marks: form.semester_2_marks ? Number(form.semester_2_marks) : null,
         semester_2_reappears: Number(form.semester_2_reappears),
         semester_3_status: form.semester_3_status,
@@ -388,6 +392,39 @@ function Index() {
                 />
               </Field>
 
+              <Field id="lateral_entry" label="Lateral Entry" required>
+                <select
+                  id="lateral_entry"
+                  className={fieldClass}
+                  value={form.lateral_entry}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((current) => ({
+                      ...current,
+                      lateral_entry: value,
+                      semester_1_status: value === "Yes" ? "" : current.semester_1_status,
+                      semester_1_marks: value === "Yes" ? "" : current.semester_1_marks,
+                      semester_1_reappears: value === "Yes" ? "0" : current.semester_1_reappears,
+                      semester_2_status: value === "Yes" ? "" : current.semester_2_status,
+                      semester_2_marks: value === "Yes" ? "" : current.semester_2_marks,
+                      semester_2_reappears: value === "Yes" ? "0" : current.semester_2_reappears,
+                    }));
+                    setErrors((current) => ({
+                      ...current,
+                      semester_1_status: undefined,
+                      semester_1_marks: undefined,
+                      semester_1_reappears: undefined,
+                      semester_2_status: undefined,
+                      semester_2_marks: undefined,
+                      semester_2_reappears: undefined,
+                    }));
+                  }}
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </Field>
+
               <Field
                 id="aadhaar_number"
                 label="Aadhaar No."
@@ -440,7 +477,9 @@ function Index() {
               <Field id="tenth_percentage" label="10th Marks (%)" required error={errors.tenth_percentage}><input id="tenth_percentage" type="number" min={0} max={100} step="0.01" className={fieldClass} placeholder="Enter 10th percentage" value={form.tenth_percentage} onChange={(e) => set("tenth_percentage", e.target.value)} aria-invalid={!!errors.tenth_percentage} /></Field>
               <Field id="twelfth_percentage" label="12th Marks (%)" required error={errors.twelfth_percentage}><input id="twelfth_percentage" type="number" min={0} max={100} step="0.01" className={fieldClass} placeholder="Enter 12th percentage" value={form.twelfth_percentage} onChange={(e) => set("twelfth_percentage", e.target.value)} aria-invalid={!!errors.twelfth_percentage} /></Field>
 
-              {semesterNumbers.map((semester) => {
+              {semesterNumbers
+                .filter((semester) => form.lateral_entry !== "Yes" || semester > 2)
+                .map((semester) => {
                 const statusKey = `semester_${semester}_status` as keyof FormState;
                 const marksKey = `semester_${semester}_marks` as keyof FormState;
                 const reappearsKey = `semester_${semester}_reappears` as keyof FormState;
@@ -483,7 +522,7 @@ function Index() {
                     <Field id={reappearsKey} label="No. of Backlogs" required={status === "Backlog"} error={errors[reappearsKey]}><input id={reappearsKey} type="number" min={status === "Backlog" ? 1 : 0} step={1} className={fieldClass} value={form[reappearsKey]} disabled={status !== "Backlog"} onChange={(e) => set(reappearsKey, e.target.value)} /></Field>
                   </div>
                 );
-              })}
+                })}
 
               <Field id="average_percentage" label="Total Percentage (Automatic)"><input id="average_percentage" type="text" className={fieldClass} value={calculatedAverage === null ? "" : calculatedAverage.toFixed(2)} placeholder="Calculated from available semesters" readOnly /></Field>
               <Field id="total_reappears" label="Total Backlogs (Automatic)"><input id="total_reappears" type="text" className={fieldClass} value={String(calculatedTotalReappears)} readOnly /></Field>
