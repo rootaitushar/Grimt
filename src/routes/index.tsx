@@ -207,7 +207,7 @@ function Index() {
       const status = form[statusKey];
       const marks = Number(form[marksKey]);
       const reappears = Number(form[reappearsKey]);
-      if (!status && semester <= 5) e[statusKey] = "Please select the semester result status.";
+      if (!status && semester <= 4) e[statusKey] = "Please select the semester result status.";
       if (!status) continue;
       if (status !== "Result Awaited" && (form[marksKey] === "" || marks < 0 || marks > 100))
         e[marksKey] = "Please enter a percentage between 0 and 100.";
@@ -257,7 +257,7 @@ function Index() {
         semester_4_status: form.semester_4_status,
         semester_4_marks: form.semester_4_marks ? Number(form.semester_4_marks) : null,
         semester_4_reappears: Number(form.semester_4_reappears),
-        semester_5_status: form.semester_5_status,
+        semester_5_status: form.semester_5_status || null,
         semester_5_marks: form.semester_5_marks ? Number(form.semester_5_marks) : null,
         semester_5_reappears: Number(form.semester_5_reappears),
         semester_6_status: form.semester_6_status || null,
@@ -449,8 +449,8 @@ function Index() {
                   <div key={semester} className="grid gap-3 rounded-lg border border-border p-3 sm:col-span-2 sm:grid-cols-3">
                     <Field
                       id={statusKey}
-                      label={`Semester ${semester} Status${semester >= 6 ? " (Optional)" : ""}`}
-                      required={semester <= 5}
+                      label={`Semester ${semester} Status${semester >= 5 ? " (Optional)" : ""}`}
+                      required={semester <= 4}
                       error={errors[statusKey]}
                     >
                       <select
